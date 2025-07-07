@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เครื่องมือสร้างแผนภาพต้น-ใบ (พร้อมเฉลยและแบบทดสอบ)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f7fafc;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .tab-btn.active {
+            border-color: #4f46e5;
+            background-color: #4f46e5;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .activity-card {
+            transition: all 0.3s ease-in-out;
+        }
+        .activity-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+        #score-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-10">
+            <div class="inline-block bg-indigo-100 text-indigo-600 p-4 rounded-full mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+                    <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <h1 class="text-3xl md:text-4xl font-bold text-indigo-800">เครื่องมือสร้างแผนภาพต้น-ใบสุดน่ารัก</h1>
+            <p class="text-gray-600 mt-2">สร้างและวิเคราะห์แผนภาพต้น-ใบแบบหลังชนกัน (Back-to-back) สำหรับการเรียนการสอน</p>
+        </header>
+
+        <!-- Tabs Navigation -->
+        <div class="mb-8">
+            <nav class="flex justify-center flex-wrap space-x-2 md:space-x-4 bg-white p-2 rounded-xl shadow-sm" aria-label="Tabs">
+                <button class="tab-btn active text-base md:text-lg font-medium py-3 px-4 md:px-6 rounded-lg transition" data-tab="generator">เครื่องมือสร้างแผนภาพ</button>
+                <button class="tab-btn text-base md:text-lg font-medium py-3 px-4 md:px-6 rounded-lg transition" data-tab="activities">กิจกรรมกลุ่ม</button>
+                <button class="tab-btn text-base md:text-lg font-medium py-3 px-4 md:px-6 rounded-lg transition" data-tab="problem">โจทย์ปัญหาประยุกต์</button>
+                <button class="tab-btn text-base md:text-lg font-medium py-3 px-4 md:px-6 rounded-lg transition" data-tab="quiz">แบบทดสอบ</button>
+            </nav>
+        </div>
+
+        <!-- Tab Content -->
+        <main>
+            <!-- Generator Tab -->
+            <div id="generator" class="tab-content active">
+                <div class="bg-indigo-50 border-l-4 border-indigo-400 text-indigo-800 p-4 rounded-r-lg mb-6" role="alert">
+                    <p class="font-bold">วิธีใช้งาน</p>
+                    <p>1. ป้อนชุดข้อมูลตัวเลขในช่อง "ข้อมูลชุดที่ 1" และ "ข้อมูลชุดที่ 2" โดยคั่นแต่ละตัวเลขด้วยเครื่องหมายจุลภาค (,)</p>
+                    <p>2. กดปุ่ม "เตรียมข้อมูลและวิเคราะห์" เพื่อดูข้อมูลเบื้องต้น</p>
+                    <p>3. ให้นักเรียนลองสร้างแผนภาพด้วยตนเองก่อน จากนั้นกด "ดูเฉลยแผนภาพ" เพื่อตรวจสอบ</p>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Input Section -->
+                    <div class="bg-white p-6 rounded-2xl shadow-lg">
+                        <h2 class="text-2xl font-semibold mb-4 text-gray-700">ป้อนข้อมูลของคุณ</h2>
+                        <div class="mb-4">
+                            <label for="data1" class="block font-medium mb-1">ข้อมูลชุดที่ 1</label>
+                            <textarea id="data1" rows="6" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" placeholder="เช่น 78, 54, 67, 82, 91"></textarea>
+                        </div>
+                        <div>
+                            <label for="data2" class="block font-medium mb-1">ข้อมูลชุดที่ 2</label>
+                            <textarea id="data2" rows="6" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" placeholder="เช่น 65, 72, 88, 97, 61"></textarea>
+                        </div>
+                        <button id="prepareBtn" class="mt-6 w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition-transform transform hover:scale-105 shadow-md">
+                            เตรียมข้อมูลและวิเคราะห์
+                        </button>
+                    </div>
+
+                    <!-- Output Section -->
+                    <div class="bg-white p-6 rounded-2xl shadow-lg">
+                        <h2 class="text-2xl font-semibold mb-4 text-gray-700">ผลลัพธ์</h2>
+                        <div id="analysis-output" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                            <!-- Analysis results will appear here -->
+                        </div>
+                        <div id="plot-output" class="bg-gray-50 p-4 rounded-lg overflow-x-auto min-h-[200px] flex items-center justify-center">
+                            <p class="text-center text-gray-500">ผลลัพธ์แผนภาพจะแสดงที่นี่หลังจากกดดูเฉลย</p>
+                        </div>
+                        <div id="answer-button-container" class="mt-4 text-center">
+                             <!-- Answer button will be injected here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activities Tab -->
+            <div id="activities" class="tab-content">
+                 <div class="bg-sky-50 border-l-4 border-sky-400 text-sky-800 p-4 rounded-r-lg mb-6" role="alert">
+                    <p class="font-bold">คำชี้แจงกิจกรรมกลุ่ม</p>
+                    <p>1. เลือกหัวข้อกิจกรรมที่กลุ่มสนใจ</p>
+                    <p>2. กดปุ่ม "โหลดข้อมูลนี้" เพื่อนำชุดข้อมูลไปใส่ในหน้า "เครื่องมือสร้างแผนภาพ" โดยอัตโนมัติ</p>
+                    <p>3. กด "เตรียมข้อมูลและวิเคราะห์" จากนั้นให้นักเรียนช่วยกันสร้างแผนภาพด้วยตนเองก่อน แล้วค่อยกด "ดูเฉลยแผนภาพ" เพื่อตรวจสอบความถูกต้อง</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Activity A -->
+                    <div class="activity-card bg-white p-6 rounded-2xl shadow-lg text-center">
+                        <div class="inline-block bg-red-100 text-red-600 p-3 rounded-full mb-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-red-700 mb-2">A: ยอดวิวคลิปสั้น</h3>
+                        <p class="text-gray-600 mb-4 text-sm">เปรียบเทียบยอดวิว (หลักร้อย) ของคลิป 30 คลิป ระหว่าง "TikTok" กับ "YouTube Shorts"</p>
+                        <button class="load-data-btn w-full bg-red-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-600 transition" data-set="A">โหลดข้อมูลนี้</button>
+                    </div>
+                    <!-- Activity B -->
+                    <div class="activity-card bg-white p-6 rounded-2xl shadow-lg text-center">
+                        <div class="inline-block bg-pink-100 text-pink-600 p-3 rounded-full mb-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M8 21h8a2 2 0 0 0 2-2V7H6v12a2 2 0 0 0 2 2z"/>
+                                <path d="M12 7V3"/>
+                                <path d="M10 3h4"/>
+                                <circle cx="12" cy="14" r="1"/>
+                                <circle cx="9" cy="17" r="1"/>
+                                <circle cx="15" cy="17" r="1"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-pink-700 mb-2">B: แคลอรี่ในชานมไข่มุก</h3>
+                        <p class="text-gray-600 mb-4 text-sm">เปรียบเทียบปริมาณแคลอรี่ (kcal) ของชานมไข่มุก 30 แก้ว จาก "ร้าน A" กับ "ร้าน B"</p>
+                        <button class="load-data-btn w-full bg-pink-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-pink-600 transition" data-set="B">โหลดข้อมูลนี้</button>
+                    </div>
+                    <!-- Activity C -->
+                    <div class="activity-card bg-white p-6 rounded-2xl shadow-lg text-center">
+                        <div class="inline-block bg-green-100 text-green-600 p-3 rounded-full mb-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 6l12-3" /></svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-green-700 mb-2">C: ระยะเวลาฟังเพลง</h3>
+                        <p class="text-gray-600 mb-4 text-sm">เปรียบเทียบระยะเวลาการฟังเพลง (นาที) ต่อวัน ของผู้ใช้ 30 คน ระหว่าง "Spotify" กับ "Joox"</p>
+                        <button class="load-data-btn w-full bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600 transition" data-set="C">โหลดข้อมูลนี้</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Problem Tab -->
+            <div id="problem" class="tab-content">
+                 <div class="bg-white p-8 rounded-2xl shadow-lg">
+                    <div class="flex items-center mb-4">
+                        <div class="inline-block bg-rose-100 text-rose-600 p-3 rounded-full mr-4">
+                           <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        </div>
+                         <h3 class="text-2xl font-bold text-rose-700">โจทย์ปัญหาประยุกต์: การวิเคราะห์คะแนนสอบ</h3>
+                    </div>
+                    <div class="bg-rose-50 border-l-4 border-rose-400 text-rose-800 p-4 rounded-r-lg mb-6" role="alert">
+                        <p class="font-bold">คำชี้แจง</p>
+                        <p>1. กดปุ่ม "โหลดข้อมูลคะแนนสอบ" เพื่อเริ่มกิจกรรม</p>
+                        <p>2. กด "เตรียมข้อมูลและวิเคราะห์" จากนั้นให้นักเรียนช่วยกันสร้างแผนภาพและตอบคำถาม</p>
+                        <p>3. กด "ดูเฉลยแผนภาพ" เพื่อตรวจสอบแผนภาพ และใช้ข้อมูลในการตอบคำถามข้อสุดท้าย</p>
+                    </div>
+                    <p class="text-gray-600 mb-4">คะแนนสอบวิชาภาษาไทยและวิชาคณิตศาสตร์ของนักเรียนชั้น ม.6 ห้องหนึ่ง จำนวน 40 คน (เต็ม 100 คะแนน)</p>
+                    <button class="load-data-btn w-full md:w-auto bg-rose-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-rose-600 transition mb-6 shadow-md" data-set="Problem">โหลดข้อมูลคะแนนสอบ</button>
+                    <div class="mt-4 border-t pt-6">
+                        <h4 class="text-xl font-semibold mb-2">คำสั่งสำหรับวิเคราะห์:</h4>
+                        <ol class="list-decimal list-inside space-y-3 text-gray-700">
+                            <li>หลังจากสร้างแผนภาพแล้ว ให้นับจำนวนนักเรียนที่ได้เกรด 4, 3, 2, 1 และ 0 ในแต่ละวิชาตามเกณฑ์ต่อไปนี้:
+                                <ul class="list-disc list-inside ml-6 mt-2 bg-gray-50 p-4 rounded-lg space-y-1">
+                                    <li><b>เกรด 4:</b> 90 – 100</li>
+                                    <li><b>เกรด 3:</b> 80 – 89</li>
+                                    <li><b>เกรด 2:</b> 70 – 79</li>
+                                    <li><b>เกรด 1:</b> 60 – 69</li>
+                                    <li><b>เกรด 0:</b> 0 – 59</li>
+                                </ul>
+                            </li>
+                            <li>มีนักเรียนกี่คน ที่ถ้าได้คะแนนสอบ **วิชาคณิตศาสตร์** เพิ่มขึ้นอีกเพียง 1 คะแนน จะทำให้ได้เกรดดีขึ้น? (เช่น จาก 69 เป็น 70 หรือ 79 เป็น 80)</li>
+                            <li>จากข้อมูลที่ได้ นักเรียนห้องนี้ถนัดวิชาใดมากกว่ากัน เพราะเหตุใด?</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quiz Tab -->
+            <div id="quiz" class="tab-content">
+                <div class="bg-white p-8 rounded-2xl shadow-lg max-w-4xl mx-auto">
+                    <div class="flex items-center mb-4">
+                        <div class="inline-block bg-purple-100 text-purple-600 p-3 rounded-full mr-4">
+                           <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        </div>
+                         <h3 class="text-2xl font-bold text-purple-700">แบบทดสอบหลังเรียน</h3>
+                    </div>
+                    <div class="bg-purple-50 border-l-4 border-purple-400 text-purple-800 p-4 rounded-r-lg mb-6" role="alert">
+                        <p class="font-bold">คำชี้แจง</p>
+                        <p>เลือกคำตอบที่ถูกต้องที่สุดเพียงข้อเดียว จากนั้นกด "ส่งคำตอบ" เพื่อดูคะแนน</p>
+                    </div>
+                    <form id="quizForm" class="space-y-8">
+                        <!-- Question 1 -->
+                        <div class="q-container">
+                            <p class="font-semibold text-lg mb-2">1. จากแผนภาพต้น-ใบต่อไปนี้ คะแนนสูงสุดของนักเรียนคือเท่าใด?</p>
+                            <div class="font-mono text-center text-base p-3 bg-gray-100 rounded-lg my-2">
+                                <div class="font-sans font-bold mb-2">คะแนนสอบ</div>
+                                <div class="w-fit mx-auto">
+                                    <div class="grid grid-cols-[auto_1fr] gap-x-4 text-left">
+                                        <div class="font-bold border-r-2 border-gray-400 pr-4">ต้น</div><div class="font-bold">ใบ</div>
+                                        <div class="border-r-2 border-gray-400 pr-4 font-bold text-indigo-600">5</div><div class="tracking-wider">2 8</div>
+                                        <div class="border-r-2 border-gray-400 pr-4 font-bold text-indigo-600">6</div><div class="tracking-wider">1 5 5 9</div>
+                                        <div class="border-r-2 border-gray-400 pr-4 font-bold text-indigo-600">7</div><div class="tracking-wider">0 2 4 7 8</div>
+                                        <div class="border-r-2 border-gray-400 pr-4 font-bold text-indigo-600">8</div><div class="tracking-wider">1 3 3 5</div>
+                                        <div class="border-r-2 border-gray-400 pr-4 font-bold text-indigo-600">9</div><div class="tracking-wider">0 2</div>
+                                    </div>
+                                </div>
+                                <div class="text-sm text-gray-600 mt-2 font-sans text-center">Key: 5|2 = 52 คะแนน</div>
+                            </div>
+                            <div class="space-y-2 mt-3">
+                                <label class="flex items-center p-3 border rounded-lg hover:bg-gray-100 cursor-pointer"><input type="radio" name="q1" value="a" class="mr-3"> 90</label>
+                                <label class="flex items-center p-3 border rounded-lg hover:bg-gray-100 cursor-pointer"><input type="radio" name="q1" value="b" class="mr-3"> 92</label>
+                                <label class="flex items-center p-3 border rounded-lg hover:bg-gray-100 cursor-pointer"><input type="radio" name="q1" value="c" class="mr-3"> 2</label>
+                            </div>
+                        </div>
+                        <!-- Question 2 -->
+                        <div class="q-container">
+                            <p class="font-semibold text-lg mb-2">2. จากแผนภาพในข้อ 1 คะแนนต่ำสุดของนักเรียนคือเท่าใด?</p>
+                            <div class="space-y-2 mt-3">
+                                <label class="flex items-center p-3 border rounded-lg hover:bg-gray-100 cursor-pointer"><input type="radio" name="q2" value="a" class="mr-3"> 52</label>
+                                <label class="flex items-center p-3 border rounded-lg hover:bg-gray-100 cursor-pointer"><input type="radio" name="q2" value="b" class="mr-3"> 5</label>
+                                <label class="flex items-center p-3 border rounded-lg hover:bg-gray-100 cursor-pointer"><input type="radio" name="q2" value="c" class="mr-3"> 40</label>
+                            </div>
+                        </div>
+                        <!-- Question 3 -->
+                        <div class="q-container">
+                            <p class="font-semibold text-lg mb-2">3. จากแผนภาพในข้อ 1 ช่วงคะแนนใดมีนักเรียนสอบได้มากที่สุด?</p>
+                            <div class="space-y-2 mt-3">
+                                <label class="flex items-center p-3 border rounded-lg hover:bg-gray-100 cursor-pointer"><input type="radio" name="q3" value="a" class="mr-3"> 60 - 69 คะแนน</label>
+                                <label class="flex items-center p-3 border rounded-lg hover:bg-gray-100 cursor-pointer"><input type="radio" name="q3" value="b" class="mr-3"> 80 - 89 คะแนน</label>
+                                <label class="flex items-center p-3 border rounded-lg hover:bg-gray-100 cursor-pointer"><input type="radio" name="q3" value="c" class="mr-3"> 70 - 79 คะแนน</label>
+                            </div>
+                        </div>
+                        <!-- Question 4 -->
+                        <div class="q-container">
+                            <p class="font-semibold text-lg mb-2">4. จากแผนภาพต้น-ใบต่อไปนี้ ข้อใดสรุปได้ถูกต้อง?</p>
+                            <div class="font-mono text-center text-base p-3 bg-gray-100 rounded-lg my-2 overflow-x-auto">
+                                <div class="w-fit mx-auto">
+                                    <div class="grid grid-cols-3 text-center mb-2 font-sans font-bold">
+                                        <span class="text-right pr-4">ร้าน A</span>
+                                        <span>ต้น</span>
+                                        <span class="text-left pl-4">ร้าน B</span>
+                                    </div>
+                                    <hr class="my-2 border-gray-300">
+                                    <div class="grid grid-cols-3 text-center items-start gap-x-2 py-1">
+                                        <span class="text-right pr-4 tracking-wider">8 5</span>
+                                        <span class="font-bold border-x-2 border-indigo-300 bg-indigo-50 rounded px-2">20</span>
+                                        <span class="text-left pl-4 tracking-wider">2 5</span>
+                                    </div>
+                                    <div class="grid grid-cols-3 text-center items-start gap-x-2 py-1">
+                                        <span class="text-right pr-4 tracking-wider">9 7 2</span>
+                                        <span class="font-bold border-x-2 border-indigo-300 bg-indigo-50 rounded px-2">21</span>
+                                        <span class="text-left pl-4 tracking-wider">0 3 6</span>
+                                    </div>
+                                    <div class="grid grid-cols-3 text-center items-start gap-x-2 py-1">
+                                        <span class="text-right pr-4 tracking-wider">6 1</span>
+                                        <span class="font-bold border-x-2 border-indigo-300 bg-indigo-50 rounded px-2">22</span>
+                                        <span class="text-left pl-4 tracking-wider">1 5 8</span>
+                                    </div>
+                                    <div class="grid grid-cols-3 text-center items-start gap-x-2 py-1">
+                                        <span class="text-right pr-4 tracking-wider">3</span>
+                                        <span class="font-bold border-x-2 border-indigo-300 bg-indigo-50 rounded px-2">23</span>
+                                        <span class="text-left pl-4 tracking-wider">0 2</span>
+                                    </div>
+                                    <hr class="my-2 border-gray-300">
+                                    <div class="text-sm text-gray-600 mt-2 font-sans">Key: 20|5 = 205 บาท</div>
+                                </div>
+                            </div>
+                            <div class="space-y-2 mt-3">
+                                <label class="flex items-center p-3 border rounded-lg hover:bg-gray-100 cursor-pointer"><input type="radio" name="q4" value="a" class="mr-3"> ราคาสินค้าส่วนใหญ่ของร้าน A สูงกว่าร้าน B</label>
+                                <label class="flex items-center p-3 border rounded-lg hover:bg-gray-100 cursor-pointer"><input type="radio" name="q4" value="b" class="mr-3"> ราคาสินค้าส่วนใหญ่ของร้าน B สูงกว่าร้าน A</label>
+                                <label class="flex items-center p-3 border rounded-lg hover:bg-gray-100 cursor-pointer"><input type="radio" name="q4" value="c" class="mr-3"> ราคาสินค้าของทั้งสองร้านใกล้เคียงกัน</label>
+                            </div>
+                        </div>
+                        <!-- Question 5 -->
+                        <div class="q-container">
+                            <p class="font-semibold text-lg mb-2">5. ข้อใดคือประโยชน์ที่สำคัญที่สุดของแผนภาพต้น-ใบ?</p>
+                            <div class="space-y-2 mt-3">
+                                <label class="flex items-center p-3 border rounded-lg hover:bg-gray-100 cursor-pointer"><input type="radio" name="q5" value="a" class="mr-3"> เห็นภาพรวมของข้อมูล โดยที่ยังคงเห็นค่าของข้อมูลดิบทุกตัวได้</label>
+                                <label class="flex items-center p-3 border rounded-lg hover:bg-gray-100 cursor-pointer"><input type="radio" name="q5" value="b" class="mr-3"> เหมาะสำหรับข้อมูลที่มีจำนวนมากเป็นพันๆ ตัว</label>
+                                <label class="flex items-center p-3 border rounded-lg hover:bg-gray-100 cursor-pointer"><input type="radio" name="q5" value="c" class="mr-3"> สามารถหาค่าเฉลี่ยเลขคณิตได้ง่ายที่สุด</label>
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-purple-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-purple-700 active:bg-purple-800 transition-transform transform hover:scale-105 shadow-md">
+                            ส่งคำตอบ
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Score Modal -->
+    <div id="score-modal">
+        <div class="text-white text-center">
+            <p class="text-4xl mb-4">คะแนนของคุณคือ</p>
+            <p id="score-display" class="text-9xl font-bold mb-8">0/5</p>
+            <button id="retry-quiz-btn" class="bg-white text-purple-700 font-bold py-3 px-8 rounded-lg text-2xl hover:bg-gray-200 transition">
+                ลองอีกครั้ง
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- Data for Activities (Updated for better distribution) ---
+        const datasets = {
+            A: { data1: '185, 222, 161, 245, 176, 205, 231, 190, 212, 189, 168, 240, 195, 201, 198, 233, 188, 221, 175, 160, 248, 215, 210, 199, 165, 172, 230, 225, 208, 239', data2: '170, 230, 210, 189, 240, 190, 200, 165, 220, 180, 225, 215, 208, 175, 235, 199, 218, 185, 159, 228, 194, 231, 178, 205, 181, 226, 202, 191, 239, 172', label1: 'TikTok', label2: 'YouTube Shorts' },
+            B: { data1: '315, 282, 261, 345, 276, 305, 261, 290, 322, 289, 338, 250, 295, 301, 298, 333, 288, 321, 275, 310, 340, 255, 318, 299, 265, 322, 280, 325, 308, 330', data2: '328, 296, 271, 315, 299, 325, 283, 301, 340, 319, 330, 284, 335, 321, 308, 313, 278, 341, 295, 320, 310, 305, 338, 312, 288, 329, 300, 335, 328, 318', label1: 'ร้าน A', label2: 'ร้าน B' },
+            C: { data1: '85, 142, 78, 133, 108, 121, 99, 145, 65, 90, 141, 77, 129, 96, 140, 112, 91, 146, 67, 98, 143, 66, 94, 147, 64, 92, 144, 60, 109, 119', data2: '75, 132, 68, 123, 115, 111, 89, 135, 65, 80, 131, 67, 119, 86, 130, 102, 81, 136, 67, 88, 133, 66, 84, 137, 64, 82, 134, 70, 99, 129', label1: 'Spotify', label2: 'Joox' },
+            Problem: { data1: '63, 88, 79, 92, 86, 87, 83, 83, 78, 40, 68, 76, 46, 81, 92, 77, 84, 76, 70, 77, 75, 98, 81, 82, 81, 81, 87, 78, 70, 94, 79, 52, 82, 77, 81, 81, 77, 70, 74', data2: '69, 78, 79, 90, 56, 67, 73, 59, 65, 45, 47, 55, 59, 82, 95, 85, 75, 74, 65, 81, 57, 66, 63, 71, 49, 52, 70, 60, 50, 70, 64, 78, 52, 82, 77, 81, 80, 77, 70, 74', label1: 'ภาษาไทย', label2: 'คณิตศาสตร์' }
+        };
+        
+        // --- DOM Elements ---
+        const prepareBtn = document.getElementById('prepareBtn');
+        const data1Input = document.getElementById('data1');
+        const data2Input = document.getElementById('data2');
+        const plotOutput = document.getElementById('plot-output');
+        const analysisOutput = document.getElementById('analysis-output');
+        const answerButtonContainer = document.getElementById('answer-button-container');
+        const tabs = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const loadDataButtons = document.querySelectorAll('.load-data-btn');
+        const quizForm = document.getElementById('quizForm');
+        const scoreModal = document.getElementById('score-modal');
+        const scoreDisplay = document.getElementById('score-display');
+        const retryQuizBtn = document.getElementById('retry-quiz-btn');
+
+        // --- Functions ---
+        function parseData(inputString) {
+            if (!inputString) return [];
+            return inputString.split(',').map(item => parseFloat(item.trim())).filter(num => !isNaN(num));
+        }
+
+        function prepareAndAnalyze() {
+            const dataset1 = parseData(data1Input.value);
+            const dataset2 = parseData(data2Input.value);
+            if (dataset1.length === 0 && dataset2.length === 0) {
+                analysisOutput.innerHTML = '';
+                plotOutput.innerHTML = '<p class="text-center text-red-500">กรุณาป้อนข้อมูลก่อน</p>';
+                answerButtonContainer.innerHTML = '';
+                return;
+            }
+            analysisOutput.innerHTML = createAnalysis(dataset1, dataset2);
+            plotOutput.innerHTML = '<p class="text-center text-gray-500">ลองสร้างแผนภาพด้วยตนเองก่อน แล้วค่อยกดดูเฉลยนะ!</p>';
+            answerButtonContainer.innerHTML = '';
+            const answerBtn = document.createElement('button');
+            answerBtn.textContent = 'ดูเฉลยแผนภาพ';
+            answerBtn.className = 'w-full md:w-auto bg-green-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-600 transition shadow-md';
+            answerBtn.addEventListener('click', function toggleAnswer() {
+                if (this.textContent === 'ดูเฉลยแผนภาพ') {
+                    plotOutput.innerHTML = createStemAndLeafPlot(dataset1, dataset2);
+                    this.textContent = 'ซ่อนเฉลย';
+                    this.className = 'w-full md:w-auto bg-yellow-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-yellow-600 transition shadow-md';
+                } else {
+                    plotOutput.innerHTML = '<p class="text-center text-gray-500">ลองสร้างแผนภาพด้วยตนเองก่อน แล้วค่อยกดดูเฉลยนะ!</p>';
+                    this.textContent = 'ดูเฉลยแผนภาพ';
+                    this.className = 'w-full md:w-auto bg-green-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-600 transition shadow-md';
+                }
+            });
+            answerButtonContainer.appendChild(answerBtn);
+        }
+        
+        function createStemAndLeafPlot(data1, data2) {
+            const allData = [...data1, ...data2];
+            if (allData.length === 0) return '';
+            const plotData = {};
+            const label1 = document.querySelector('label[for="data1"]').textContent;
+            const label2 = document.querySelector('label[for="data2"]').textContent;
+            
+            const getStem = num => {
+                const s = String(num);
+                return s.length > 1 ? s.slice(0, -1) : '0';
+            };
+            const getLeaf = num => {
+                const s = String(num);
+                return s.slice(-1);
+            };
+            
+            const allStems = allData.map(num => parseInt(getStem(num), 10)).filter(n => !isNaN(n));
+            if (allStems.length === 0) return '<p class="text-center text-gray-500">ไม่มีข้อมูลที่ถูกต้องสำหรับสร้างแผนภาพ</p>';
+
+            const minStem = Math.min(...allStems);
+            const maxStem = Math.max(...allStems);
+
+            for (let i = minStem; i <= maxStem; i++) {
+                plotData[String(i)] = { left: [], right: [] };
+            }
+
+            data1.forEach(num => {
+                const stem = getStem(num);
+                if (plotData[stem]) plotData[stem].left.push(getLeaf(num));
+            });
+            data2.forEach(num => {
+                const stem = getStem(num);
+                if (plotData[stem]) plotData[stem].right.push(getLeaf(num));
+            });
+
+            const exampleNum = allData[0];
+            const exampleStem = getStem(exampleNum);
+            const exampleLeaf = getLeaf(exampleNum);
+            const keyText = `${exampleStem} | ${exampleLeaf} = ${exampleNum}`;
+
+            let html = '<div class="text-base md:text-lg leading-tight whitespace-pre text-center font-mono w-full">';
+            html += `<div class="grid grid-cols-3 text-center mb-2 font-sans font-bold"><span class="text-right pr-4">${label1}</span><span>ต้น</span><span class="text-left pl-4">${label2}</span></div>`;
+            html += `<hr class="my-2 border-gray-300">\n`;
+            for (const stem in plotData) {
+                const leftLeaves = plotData[stem].left.sort((a, b) => b - a).join(' ');
+                const rightLeaves = plotData[stem].right.sort((a, b) => a - b).join(' ');
+                html += `<div class="grid grid-cols-3 text-center items-start gap-x-2 py-1">`;
+                html += `<span class="text-right pr-4 tracking-wider">${leftLeaves}</span>`;
+                html += `<span class="font-bold border-x-2 border-indigo-300 bg-indigo-50 rounded px-2">${stem}</span>`;
+                html += `<span class="text-left pl-4 tracking-wider">${rightLeaves}</span>`;
+                html += `</div>`;
+            }
+            html += `<hr class="my-2 border-gray-300">\n`;
+            html += `<div class="text-sm text-gray-500 mt-2 font-sans">คำสำคัญ (Key): ${keyText}</div>`;
+            html += '</div>';
+            return html;
+        }
+
+        function createAnalysis(data1, data2) {
+            let html = '';
+            const label1 = document.querySelector('label[for="data1"]').textContent;
+            const label2 = document.querySelector('label[for="data2"]').textContent;
+            if(data1.length > 0) {
+                html += `<div class="bg-blue-50 p-4 rounded-xl border border-blue-200"><h4 class="font-bold text-blue-800">${label1}</h4><p>จำนวนข้อมูล: <span class="font-semibold">${data1.length}</span></p><p>ค่าสูงสุด: <span class="font-semibold">${Math.max(...data1)}</span></p><p>ค่าต่ำสุด: <span class="font-semibold">${Math.min(...data1)}</span></p></div>`;
+            }
+            if(data2.length > 0) {
+                html += `<div class="bg-green-50 p-4 rounded-xl border border-green-200"><h4 class="font-bold text-green-800">${label2}</h4><p>จำนวนข้อมูล: <span class="font-semibold">${data2.length}</span></p><p>ค่าสูงสุด: <span class="font-semibold">${Math.max(...data2)}</span></p><p>ค่าต่ำสุด: <span class="font-semibold">${Math.min(...data2)}</span></p></div>`;
+            }
+            return html;
+        }
+
+        // --- Event Listeners ---
+        prepareBtn.addEventListener('click', prepareAndAnalyze);
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+            });
+        });
+
+        loadDataButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const set = datasets[button.dataset.set];
+                if (set) {
+                    data1Input.value = set.data1;
+                    data2Input.value = set.data2;
+                    document.querySelector('label[for="data1"]').textContent = set.label1;
+                    document.querySelector('label[for="data2"]').textContent = set.label2;
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+                    document.querySelector('.tab-btn[data-tab="generator"]').classList.add('active');
+                    document.getElementById('generator').classList.add('active');
+                    prepareAndAnalyze();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            });
+        });
+
+        // --- Quiz Logic ---
+        quizForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const correctAnswers = ['b', 'a', 'c', 'b', 'a'];
+            let score = 0;
+            const totalQuestions = 5;
+
+            for (let i = 1; i <= totalQuestions; i++) {
+                const question = quizForm.querySelector(`input[name="q${i}"]:checked`);
+                if (question && question.value === correctAnswers[i - 1]) {
+                    score++;
+                }
+            }
+
+            scoreDisplay.textContent = `${score}/${totalQuestions}`;
+            scoreModal.style.display = 'flex';
+        });
+
+        retryQuizBtn.addEventListener('click', () => {
+            scoreModal.style.display = 'none';
+            quizForm.reset();
+            const quizTab = document.getElementById('quiz');
+            quizTab.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+    </script>
+</body>
+</html>
